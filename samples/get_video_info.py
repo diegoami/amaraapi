@@ -1,5 +1,5 @@
-from amaraapi.amara import *
-from argparse import *
+from amaraapi import Amara
+
 import argparse
 from samples.amara_env import amara_headers
 

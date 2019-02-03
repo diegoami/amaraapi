@@ -10,7 +10,7 @@ os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 
 setup(
     name='amaraapi',
-    version='0.0.3',
+    version='0.0.4',
     packages=['amaraapi'],
     include_package_data=True,
     keywords='amara api wrapper',

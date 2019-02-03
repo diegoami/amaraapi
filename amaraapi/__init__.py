@@ -1,1 +1,2 @@
-from .amara import AmaraVideo, Amara, convert_to_lyrics
+from .amara_video import AmaraVideo
+from .amara_tools import AmaraTools

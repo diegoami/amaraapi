@@ -1,5 +1,6 @@
 import requests
 from .amara_video import AmaraVideo
+from .exceptions import AmaraApiException
 
 
 class AmaraTools:
@@ -63,13 +64,15 @@ class AmaraTools:
 
         return ret_value
 
-    def get_video_id(self, video_url, language_code):
+    def get_video_id(self, video_url, language_code=None):
         url = 'https://amara.org/api/videos/'
         urldict = dict({'video_url': video_url})
         r = requests.get(url, params=urldict, headers=self.headers)
         json_ret = r.json()
-        print(json_ret)
         if 'objects' in json_ret and len(json_ret['objects']) > 0:
             return json_ret['objects'][0]['id']
         else:
-            return self.post_video(video_url, language_code)
+            if language_code:
+                return self.post_video(video_url, language_code)
+            else:
+                raise AmaraApiException('No video can be found or crated for url {}, language {}'.format(video_url, language_code))

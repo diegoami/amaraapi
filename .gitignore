@@ -1,3 +1,6 @@
 .idea/*
 samples/amara_env.py
 **/*.pyc 
+amaraapi.egg-info/
+build/
+dist/

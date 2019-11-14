@@ -1,7 +1,9 @@
 import requests
 from .amara_video import AmaraVideo
 from .exceptions import AmaraApiException
+import time
 
+MAX_TRIES=7
 
 class AmaraTools:
 
@@ -12,14 +14,34 @@ class AmaraTools:
         self.video_url = "http://www.youtube.com/watch?v=" + video_id
         url = 'https://amara.org/api/videos/'
         urldict = dict({'video_url': self.video_url})
-        r = requests.get(url, params=urldict, headers=self.headers)
-        json_ret = r.json()
+        tries = 0
+        ok = False
 
-        if 'objects' in json_ret and len(json_ret['objects']) > 0:
-            amara_id = json_ret['objects'][0]['id']
-            return amara_id
-        else:
-            return None
+        while not ok and tries < MAX_TRIES:
+            print("Trying {} ...".format(url))
+            r = requests.get(url, params=urldict, headers=self.headers)
+            if r.ok:
+                ok = True
+                self.video_info = r.json()
+                json_ret = r.json()
+
+                if 'objects' in json_ret and len(json_ret['objects']) > 0:
+                    amara_id = json_ret['objects'][0]['id']
+                    return amara_id
+                else:
+                    print("Not found....")
+                    return None
+
+            elif r.status_code == 404:
+                print("Not found....")
+                return None
+            else:
+                tries += 1
+                waiting_for = 2 ** tries
+                print("Request failed with status {}, waiting for {} seconds".format(r.status_code, waiting_for))
+                time.sleep(waiting_for)
+
+
 
     def post_video(self, video_url, language_code):
         url = 'https://amara.org/api/videos/'

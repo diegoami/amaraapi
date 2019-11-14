@@ -1,4 +1,8 @@
 import requests
+import time
+from .exceptions import AmaraApiException
+
+MAX_TRIES=10
 
 
 class AmaraVideo:
@@ -9,22 +13,50 @@ class AmaraVideo:
 
     def get_subtitles(self, language):
 
+        tries = 0
+        ok = False
         url='https://amara.org/api/videos/'+self.amara_id+'/languages/'+language+'/subtitles/?sub_format=srt'
-
-        r =requests.get(url, headers=self.headers)
-        subtitles_obj = r.json()
-        if 'version_number' in subtitles_obj and 'subtitles' in subtitles_obj and subtitles_obj['version_number'] > 1:
-            return subtitles_obj
-        else:
-            return None
+        while not ok and tries < MAX_TRIES:
+            print("Trying {} ...".format(url))
+            r = requests.get(url, headers=self.headers)
+            if r.ok:
+                ok = True
+                subtitles_obj = r.json()
+                #if 'version_number' in subtitles_obj and 'subtitles' in subtitles_obj and subtitles_obj['version_number'] > 1:
+                return subtitles_obj
+            elif r.status_code == 404:
+                print("Not found....")
+                return None
+            else:
+                tries += 1
+                waiting_for = 2**tries
+                print("Request failed with status {}, waiting for {} seconds".format(r.status_code, waiting_for))
+                time.sleep(waiting_for)
+        if not ok:
+            raise AmaraApiException("Max tries exceeded, could not get subtitles for {}".format(url))
 
     def get_video_info(self):
+        tries = 0
+        ok = False
         if not hasattr(self, 'video_info'):
             url='https://amara.org/api/videos/'+self.amara_id+'/'
+            print("Trying {} ...".format(url))
+            while not ok and tries < MAX_TRIES:
+                r =requests.get(url, headers=self.headers)
+                if r.ok:
+                    ok = True
+                    self.video_info = r.json()
 
-            r =requests.get(url, headers=self.headers)
-            self.video_info = r.json()
-
+                elif r.status_code == 404:
+                    print("Not found....")
+                    return None
+                else:
+                    tries += 1
+                    waiting_for = 2 ** tries
+                    print("Request failed with status {}, waiting for {} seconds".format(r.status_code, waiting_for))
+                    time.sleep(waiting_for)
+            if not ok:
+                raise AmaraApiException("Max tries exceeded, could not get subtitles for {}".format(url))
         return self.video_info
 
     def get_title(self):
